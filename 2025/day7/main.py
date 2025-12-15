@@ -1,3 +1,5 @@
+from copy import deepcopy
+import time
 
 def load_input(path):
     with open(path) as f:
@@ -13,9 +15,9 @@ def load_input(path):
 
 
 def print_manifold(man):
-    print("")
     for m in man:
         print("".join(m))
+    print("")
 
 
 def part1(full_manifold):
@@ -37,11 +39,9 @@ def part1(full_manifold):
  
 
 def part2(manifold):
-    world_counter = 0
-    # Base case -- bottom
+    # If a ray reaches the bottom, count it as a timeline
     if len(manifold) == 1:
-        print("Reached bottom")
-        return world_counter
+        return 1
     
     # Otherwise, check the first row for splitters
     for j, character in enumerate(manifold[0]):
@@ -49,25 +49,20 @@ def part2(manifold):
             # Beam can continue down without issue
             if manifold[1][j] == ".":
                 manifold[1][j] = "|"
-                print_manifold(manifold)
             
             # Beam splits
             elif manifold[1][j] == "^":
-                world_counter += 1
-                # Create worlds and update counter
-                print("Going into left world..")
-                world_counter += create_and_process_world(manifold[1:].copy(), j, left=True)
-                print("Popped from left, going into right..")
-                print_manifold(manifold[1:])
-                world_counter += create_and_process_world(manifold[1:].copy(), j, left=False)
-                return world_counter
+                left_worlds = create_and_process_world(deepcopy(manifold[1:]), j, left=True)
+                right_worlds = create_and_process_world(deepcopy(manifold[1:]), j, left=False)
+                if len(manifold) - 1 == 2:
+                    print(f"Popped splitter {j} at penultimate line  ", end="\r")
+                return left_worlds + right_worlds
 
             # In this case, we have only one beam per row per world, so we can break
             # once we've found it
             break
 
     # If no splits have been found, move on to next line
-    print("Moving to next line")
     return part2(manifold[1:])
 
 
@@ -78,12 +73,12 @@ def create_and_process_world(manifold, idx_in_line, left):
     return part2(manifold)
 
 if __name__ == "__main__":
-    manifold = load_input("./test_input.txt")
+    manifold = load_input("./input.txt")
 
     # Debug
-    manifold = manifold[:6]
+    # manifold = manifold[:8]
+    # print(f"Length of full manifold: {len(manifold)}")
     print_manifold(manifold)
 
     n_worlds = part2(manifold=manifold)
-    # print_manifold(manifold)
-    print("Result:", n_worlds)
+    print("\nResult:", n_worlds)
